@@ -12,6 +12,7 @@ class StringProcessor{
     
     char* rawData;
     WordNode* results;
+    WordNode* tail;
     char marker;
 
     char* copyWord(const char* start, int length);
@@ -21,6 +22,7 @@ class StringProcessor{
     ~StringProcessor();
 
     void loadFromFile(const std::string& filename);
+    char loadTargetSymbol(const std::string& filename);
     void findWordsStartingWith(char symbol);
     void saveResultsToFile(const std::string& filename, char targetSymbol);
     void clearResults();

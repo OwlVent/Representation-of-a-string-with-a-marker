@@ -1,5 +1,6 @@
-Input Data: Lorem ipsum dolor sit amet consectetur adipiscing elit. Consectetur.ýýýý0òD:
-Target Symbol: a
-Found Words:
-- amet
-- adipiscing
+--- Control Output ---
+Raw stored data: Lorem ipsum dolor sit amet consectetur adipiscing elit.
+
+--- Search Results ---
+Target symbol: 'r'
+No words found starting with this symbol.

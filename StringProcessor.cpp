@@ -1,6 +1,6 @@
 #include "StringProcessor.h"
 
-StringProcessor::StringProcessor(): rawData(nullptr), results(nullptr), marker('.') {}
+StringProcessor::StringProcessor(): rawData(nullptr), results(nullptr), tail(nullptr), marker('\0') {}
 
 StringProcessor::~StringProcessor(){
     delete[] rawData;
@@ -8,28 +8,51 @@ StringProcessor::~StringProcessor(){
 }
 
 void StringProcessor::clearResults(){
-    while(results){
+    while (results != nullptr) {
         WordNode* temp = results;
-        results = results -> next;
-        delete[] temp -> word;
+        results = results->next;
+        if (temp->word != nullptr) {
+            delete[] temp->word;
+        }
         delete temp;
     }
+    tail = nullptr;
 }
 
 void StringProcessor::loadFromFile(const std::string& filename){
-    std::ifstream file(filename);
-    if(!file.is_open()) return;
+    std::ifstream file(filename, std::ios::binary | std::ios::ate);
+    
+    if (file.is_open()) {
+        std::streamsize size = file.tellg();
+        file.seekg(0, std::ios::beg);    
 
-    std::string line;
-    if(std::getline(file, line)){
         delete[] rawData;
-        rawData = new char[line.length() + 1];
-        for (size_t i = 0; i < line.length(); ++i){
-            rawData[i] = line[i];
+        rawData = new char[size + 1];
+
+        if (file.read(rawData, size)) {
+            rawData[size] = marker;
         }
-        rawData[line.length()] = marker;
+
+        file.close();
+    } else {
+        std::cerr << "Error: Could not open file: " << filename << std::endl;
     }
-    file.close();
+}
+
+char StringProcessor::loadTargetSymbol(const std::string& filename) {
+    std::ifstream file(filename);
+    char symbol = '\0';
+
+    if (file.is_open()) {
+        if (!(file >> symbol)) {
+            std::cerr << "Warning: Settings file is empty!" << std::endl;
+        }
+        file.close();
+    } else {
+        std::cerr << "Error: Could not open settings file: " << filename << std::endl;
+    }
+
+    return symbol;
 }
 
 char* StringProcessor::copyWord(const char* start, int length){
@@ -47,25 +70,28 @@ void StringProcessor::findWordsStartingWith(char symbol) {
 
     int i = 0;
     while (rawData[i] != marker) {
-        while (rawData[i] != marker && rawData[i] == ' ') i++;
+        while (rawData[i] != marker && (rawData[i] == ' ' || rawData[i] == '\n' || rawData[i] == '\r')) {
+            i++;
+        }
         
         if (rawData[i] == marker) break;
 
         int wordStart = i;
-        while (rawData[i] != marker && rawData[i] != ' ') i++;
+        while (rawData[i] != marker && rawData[i] != ' ' && rawData[i] != '\n' && rawData[i] != '\r') {
+            i++;
+        }
         int wordLength = i - wordStart;
 
         if (rawData[wordStart] == symbol) {
             WordNode* newNode = new WordNode;
             newNode->word = copyWord(&rawData[wordStart], wordLength);
+            newNode->next = nullptr;
             if (!results) {
                 results = newNode;
-                newNode->next = nullptr;
+                tail = newNode;
             } else {
-                WordNode* temp = results;
-                while (temp->next) temp = temp->next;
-                temp->next = newNode;
-                newNode->next = nullptr;
+                tail -> next = newNode;
+                tail = newNode;
             }
         }
     }
@@ -73,20 +99,33 @@ void StringProcessor::findWordsStartingWith(char symbol) {
 
 void StringProcessor::saveResultsToFile(const std::string& filename, char targetSymbol) {
     std::ofstream file(filename);
-    if (!file.is_open()) return;
+    if (!file.is_open()) {
+        std::cerr << "Error: Could not open output file!" << std::endl;
+        return;
+    }
 
-    file << "Input Data: " << rawData << std::endl;
-    file << "Target Symbol: " << targetSymbol << std::endl;
-    file << "Found Words:" << std::endl;
-
-    WordNode* temp = results;
-    if (!temp) {
-        file << "No words found.";
+    file << "--- Control Output ---" << std::endl;
+    if (rawData) {
+        file << "Raw stored data: " << rawData << std::endl;
     } else {
-        while (temp) {
-            file << "- " << temp->word << std::endl;
-            temp = temp->next;
+        file << "No data loaded." << std::endl;
+    }
+
+    file << "\n--- Search Results ---" << std::endl;
+    file << "Target symbol: '" << targetSymbol << "'" << std::endl;
+
+    WordNode* curr = results;
+    if (curr == nullptr) {
+        file << "No words found starting with this symbol." << std::endl;
+    } else {
+        int count = 0;
+        while (curr != nullptr) {
+            count++;
+            file << count << ". " << curr->word << std::endl;
+            curr = curr->next; 
         }
     }
+
     file.close();
+    std::cout << "Results successfully saved to " << filename << std::endl;
 }
