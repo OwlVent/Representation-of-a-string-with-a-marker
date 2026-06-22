@@ -1,6 +1,5 @@
---- Control Output ---
-Raw stored data: Lorem ipsum dolor sit amet consectetur adipiscing elit.
+1. Control Output:
+Lorem apsum dolor sit amet. Lorem ipsum dolor sit amet.
 
---- Search Results ---
-Target symbol: 'r'
-No words found starting with this symbol.
+2. Final Result:
+apsum amet. amet.

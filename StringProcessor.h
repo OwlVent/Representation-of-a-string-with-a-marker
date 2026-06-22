@@ -3,27 +3,21 @@
 #include <fstream>
 #include <string>
 
-class StringProcessor{
-    private:
-    struct WordNode {
-        char* word;
-        WordNode* next;
-    };
-    
-    char* rawData;
-    WordNode* results;
-    WordNode* tail;
-    char marker;
+const int N = 55; 
 
-    char* copyWord(const char* start, int length);
+class StringProcessor {
+private:
+    char inputArray[N + 1];
+    char outputArray[N + 1];
+    char stringMarker;       
+    char fileMarker;         
+    bool isDataLoaded;       
 
-    public:
+public:
     StringProcessor();
-    ~StringProcessor();
-
-    void loadFromFile(const std::string& filename);
+    
     char loadTargetSymbol(const std::string& filename);
-    void findWordsStartingWith(char symbol);
-    void saveResultsToFile(const std::string& filename, char targetSymbol);
-    void clearResults();
+    bool loadData(const std::string& filename);
+    void processWords(char target);
+    void saveToFile(const std::string& filename, char target);
 };
